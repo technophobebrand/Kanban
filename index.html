@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handgetekend Kanbanbord</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Caveat voor handgeschreven teksten & Inter voor nette fallbacks -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icoontjes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfcf9;
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .handwritten {
+            font-family: 'Caveat', cursive;
+        }
+
+        /* Handgetekende / marker stijl randen */
+        .sketch-border-b {
+            border-bottom: 4px solid #111827;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        }
+
+        .sketch-button {
+            border: 3px solid #111827;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .sketch-button:hover {
+            transform: scale(1.03) rotate(-1deg);
+        }
+
+        /* Post-it / Sticky Note vormgeving en schaduw */
+        .sticky-note {
+            aspect-ratio: 1 / 1;
+            box-shadow: 3px 5px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: grab;
+            position: relative;
+            user-select: none;
+        }
+
+        .sticky-note:active {
+            cursor: grabbing;
+        }
+
+        .sticky-note:hover {
+            transform: scale(1.04) rotate(0deg) !important;
+            box-shadow: 6px 10px 18px rgba(0, 0, 0, 0.22);
+            z-index: 10;
+        }
+
+        /* Briefjes Kleuren */
+        .bg-note-blue { background-color: #3b82f6; color: #ffffff; }
+        .bg-note-green { background-color: #48bb78; color: #ffffff; }
+        .bg-note-yellow { background-color: #ecc94b; color: #1a202c; }
+        .bg-note-purple { background-color: #9f7aea; color: #ffffff; }
+        .bg-note-pink { background-color: #ed64a6; color: #ffffff; }
+        .bg-note-cream { background-color: #fefcbf; color: #1a202c; }
+
+        /* Drag & Drop Visual Indicator */
+        .drop-zone-active {
+            background-color: rgba(72, 187, 120, 0.12);
+            border: 2px dashed #48bb78;
+            border-radius: 12px;
+        }
+
+        .dragging {
+            opacity: 0.35;
+            transform: scale(0.95);
+        }
+
+        /* Verberg scrollbar visualisatie */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800">
+
+    <!-- Bovenste navigatie- en actiebalk -->
+    <header class="p-4 sm:p-5 flex flex-wrap justify-between items-center border-b-4 border-gray-900 bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-note-sticky text-3xl text-emerald-600"></i>
+            <h1 class="text-3xl sm:text-4xl handwritten font-bold text-gray-900 tracking-wide">Kanbanbord</h1>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <button id="add-lane-btn" class="sketch-button bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 font-bold flex items-center gap-2 text-sm sm:text-base shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span>Swimlane Toevoegen</span>
+            </button>
+            <button id="reset-board-btn" class="sketch-button bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 text-sm sm:text-base font-semibold" title="Bord Herstellen Naar Standaard">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hoofd Kanban Area -->
+    <main class="flex-1 overflow-x-auto p-4 sm:p-6 no-scrollbar">
+        <div class="min-w-[920px] max-w-[1400px] mx-auto flex flex-col gap-6">
+            
+            <!-- Vaste Kolom Titels (To Do, Doing, Done) - Normale flow, GEEN sticky overlap! -->
+            <div class="grid grid-cols-3 gap-6 pb-4 border-b-4 border-gray-900 bg-transparent">
+                <div class="text-center">
+                    <h2 class="handwritten text-3xl sm:text-4xl font-bold text-emerald-700 tracking-wide">To Do</h2>
+                </div>
+                <div class="text-center">
+                    <h2 class="handwritten text-3xl sm:text-4xl font-bold text-emerald-700 tracking-wide">Doing</h2>
+                </div>
+                <div class="text-center">
+                    <h2 class="handwritten text-3xl sm:text-4xl font-bold text-emerald-700 tracking-wide">Done</h2>
+                </div>
+            </div>
+
+            <!-- Dynamische Swimlanes Container -->
+            <div id="board-container" class="flex flex-col gap-8 pb-12">
+                <!-- Swimlanes worden hier ingeladen via JavaScript -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Logica -->
+    <script>
+        // Kleurenpalet voor de briefjes
+        const NOTE_COLORS = [
+            'bg-note-blue',
+            'bg-note-green',
+            'bg-note-yellow',
+            'bg-note-purple',
+            'bg-note-pink',
+            'bg-note-cream'
+        ];
+
+        // Standaard Data (wordt ingeladen als er geen data in localStorage staat)
+        const DEFAULT_DATA = {
+            lanes: [
+                {
+                    id: 'lane-1',
+                    title: 'Swimlane 1 - Algemeen',
+                    columns: {
+                        todo: [
+                            { id: 'note-1', text: 'Welkom! Klik hier om dit briefje aan te passen.', assignee: 'Jan', color: 'bg-note-yellow', rotation: -2 },
+                            { id: 'note-2', text: 'Sleep briefjes naar een andere kolom of swimlane.', assignee: 'Sanne', color: 'bg-note-blue', rotation: 1 }
+                        ],
+                        doing: [
+                            { id: 'note-3', text: 'Een mooi handgetekend kanbanbord opzetten.', assignee: 'Alex', color: 'bg-note-purple', rotation: -1 }
+                        ],
+                        done: [
+                            { id: 'note-4', text: 'Zorgen dat de eerste swimlane niet meer wegvalt!', assignee: 'Lisa', color: 'bg-note-green', rotation: 2 }
+                        ]
+                    }
+                },
+                {
+                    id: 'lane-2',
+                    title: 'Swimlane 2 - Features & Taken',
+                    columns: {
+                        todo: [
+                            { id: 'note-5', text: 'Extra briefjes toevoegen via de + knop.', assignee: '', color: 'bg-note-pink', rotation: -1.5 }
+                        ],
+                        doing: [],
+                        done: [
+                            { id: 'note-6', text: 'Automatische opslag via LocalStorage.', assignee: 'Mark', color: 'bg-note-cream', rotation: 1 }
+                        ]
+                    }
+                }
+            ]
+        };
+
+        // State variabelen
+        let boardData = null;
+        let draggedNoteId = null;
+        let sourceLaneId = null;
+        let sourceColId = null;
+
+        // --- LOCAL STORAGE EN DATA BEHEER ---
+
+        function loadBoardData() {
+            const cached = localStorage.getItem('kanban_sketch_data_v3');
+            if (cached) {
+                try {
+                    boardData = JSON.parse(cached);
+                } catch (e) {
+                    console.error("Fout bij het laden uit localStorage:", e);
+                    boardData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                }
+            } else {
+                boardData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+        }
+
+        function saveBoardData() {
+            localStorage.setItem('kanban_sketch_data_v3', JSON.stringify(boardData));
+        }
+
+        function generateUniqueId(prefix) {
+            return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        }
+
+        function getRandomRotation() {
+            return (Math.random() * 6 - 3).toFixed(1);
+        }
+
+        function getRandomColor() {
+            return NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+        }
+
+        // --- RENDER LOGICA ---
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            if (!boardData.lanes || boardData.lanes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-gray-500 font-medium">
+                        Geen swimlanes aanwezig. Klik bovenaan op <strong>"+ Swimlane Toevoegen"</strong> om te beginnen!
+                    </div>
+                `;
+                return;
+            }
+
+            boardData.lanes.forEach((lane) => {
+                const laneEl = document.createElement('div');
+                laneEl.className = 'flex flex-col bg-white/70 p-5 rounded-xl border-2 border-gray-900 sketch-border-b shadow-sm gap-4';
+                laneEl.dataset.laneId = lane.id;
+
+                // 1. Swimlane Header Balk (Titel + Info + Acties)
+                const laneHeader = document.createElement('div');
+                laneHeader.className = 'flex justify-between items-center pb-2 border-b-2 border-gray-300 border-dashed';
+                laneHeader.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 max-w-xl">
+                        <i class="fa-solid fa-layer-group text-gray-700 text-xl"></i>
+                        <input type="text" 
+                            class="lane-title-input handwritten text-2xl sm:text-3xl font-bold bg-transparent border-b-2 border-transparent hover:border-gray-400 focus:border-emerald-600 focus:outline-none w-full text-gray-900 px-1"
+                            value="${escapeHtml(lane.title)}" 
+                            data-lane-id="${lane.id}"
+                            placeholder="Naam swimlane...">
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <span class="bg-gray-100 px-2.5 py-1 rounded-full border border-gray-300 font-semibold text-xs">${getTotalNotesInLane(lane)} briefjes</span>
+                        <button class="delete-lane-btn text-gray-400 hover:text-red-600 p-1.5 rounded transition-colors" 
+                                data-lane-id="${lane.id}" 
+                                title="Verwijder Swimlane">
+                            <i class="fa-solid fa-trash-can text-base"></i>
+                        </button>
+                    </div>
+                `;
+                laneEl.appendChild(laneHeader);
+
+                // 2. Kolommen Grid (3 gelijke kolommen)
+                const columnsGrid = document.createElement('div');
+                columnsGrid.className = 'grid grid-cols-3 gap-6 items-start';
+
+                const colKeys = ['todo', 'doing', 'done'];
+                colKeys.forEach((colKey) => {
+                    const colEl = document.createElement('div');
+                    colEl.className = 'kanban-column flex flex-wrap content-start gap-4 p-3 rounded-lg min-h-[180px] transition-colors relative bg-gray-50/50 border border-gray-200/80';
+                    colEl.dataset.laneId = lane.id;
+                    colEl.dataset.colId = colKey;
+
+                    // Als dit de 'To Do' kolom is, plaatsen we de speciale '+' knop bovenaan
+                    if (colKey === 'todo') {
+                        const addBtnContainer = document.createElement('div');
+                        addBtnContainer.className = 'w-full mb-1 flex justify-start';
+                        addBtnContainer.innerHTML = `
+                            <button class="add-note-btn sketch-button bg-emerald-500 hover:bg-emerald-600 text-white w-9 h-9 flex items-center justify-center font-bold text-xl shadow-sm"
+                                    data-lane-id="${lane.id}"
+                                    title="Briefje toevoegen aan To Do">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        `;
+                        colEl.appendChild(addBtnContainer);
+                    }
+
+                    // Render briefjes in de huidige kolom
+                    const notes = lane.columns[colKey] || [];
+                    notes.forEach((note) => {
+                        const noteEl = createNoteElement(note, lane.id, colKey);
+                        colEl.appendChild(noteEl);
+                    });
+
+                    // Drag and Drop Event Listeners op de Kolom
+                    colEl.addEventListener('dragover', handleDragOver);
+                    colEl.addEventListener('dragenter', handleDragEnter);
+                    colEl.addEventListener('dragleave', handleDragLeave);
+                    colEl.addEventListener('drop', handleDrop);
+
+                    columnsGrid.appendChild(colEl);
+                });
+
+                laneEl.appendChild(columnsGrid);
+                container.appendChild(laneEl);
+            });
+
+            attachEventListeners();
+        }
+
+        // Maak het DOM Element voor een individueel Briefje
+        function createNoteElement(note, laneId, colId) {
+            const noteDiv = document.createElement('div');
+            noteDiv.className = `sticky-note ${note.color} p-3 rounded-sm flex flex-col justify-between w-[150px] sm:w-[175px] min-h-[160px]`;
+            noteDiv.style.transform = `rotate(${note.rotation || 0}deg)`;
+            noteDiv.draggable = true;
+            noteDiv.dataset.noteId = note.id;
+            noteDiv.dataset.laneId = laneId;
+            noteDiv.dataset.colId = colId;
+
+            const assigneeText = note.assignee || '';
+
+            noteDiv.innerHTML = `
+                <!-- Acties bovenaan het briefje -->
+                <div class="flex justify-between items-center opacity-70 hover:opacity-100 transition-opacity mb-1">
+                    <!-- Kleur Veranderen -->
+                    <button class="change-color-btn text-xs p-1 hover:scale-110 transition-transform" title="Kleur veranderen">
+                        <i class="fa-solid fa-palette"></i>
+                    </button>
+                    <!-- Verwijderen -->
+                    <button class="delete-note-btn text-xs p-1 hover:text-red-800 transition-colors" title="Verwijder briefje">
+                        <i class="fa-solid fa-xmark text-sm font-bold"></i>
+                    </button>
+                </div>
+
+                <!-- Bewerkbare Inhoud -->
+                <div class="note-text handwritten text-lg sm:text-xl font-semibold leading-tight break-words flex-1 outline-none min-h-[60px] mb-2" 
+                     contenteditable="true" 
+                     spellcheck="false"
+                     data-note-id="${note.id}">${escapeHtml(note.text)}</div>
+
+                <!-- Bewerkbare Verantwoordelijke onderaan -->
+                <div class="border-t border-black/20 pt-1 mt-auto flex items-center gap-1 text-xs opacity-90">
+                    <span class="select-none font-bold">👤</span>
+                    <input type="text" 
+                           class="note-assignee handwritten text-base font-bold bg-transparent outline-none w-full border-b border-transparent hover:border-black/30 focus:border-black/60 placeholder-black/40" 
+                           placeholder="Verantwoordelijke..."
+                           value="${escapeHtml(assigneeText)}"
+                           data-note-id="${note.id}">
+                </div>
+            `;
+
+            // Drag Events op het briefje zelf
+            noteDiv.addEventListener('dragstart', (e) => {
+                draggedNoteId = note.id;
+                sourceLaneId = laneId;
+                sourceColId = colId;
+                noteDiv.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', note.id);
+            });
+
+            noteDiv.addEventListener('dragend', () => {
+                noteDiv.classList.remove('dragging');
+                draggedNoteId = null;
+                sourceLaneId = null;
+                sourceColId = null;
+            });
+
+            return noteDiv;
+        }
+
+        function getTotalNotesInLane(lane) {
+            return (lane.columns.todo?.length || 0) + 
+                   (lane.columns.doing?.length || 0) + 
+                   (lane.columns.done?.length || 0);
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        // --- EVENT LISTENERS EN INTERACTIE ---
+
+        function attachEventListeners() {
+            // Swimlane titel wijzigen
+            document.querySelectorAll('.lane-title-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const laneId = e.target.dataset.laneId;
+                    const lane = boardData.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        lane.title = e.target.value;
+                        saveBoardData();
+                    }
+                });
+            });
+
+            // Swimlane verwijderen
+            document.querySelectorAll('.delete-lane-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const laneId = btn.dataset.laneId;
+                    const lane = boardData.lanes.find(l => l.id === laneId);
+                    
+                    if (confirm(`Weet je zeker dat je "${lane ? lane.title : 'deze swimlane'}" en alle bijbehorende briefjes wilt verwijderen?`)) {
+                        boardData.lanes = boardData.lanes.filter(l => l.id !== laneId);
+                        saveBoardData();
+                        renderBoard();
+                    }
+                });
+            });
+
+            // Briefje toevoegen via '+' in To Do
+            document.querySelectorAll('.add-note-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const laneId = btn.dataset.laneId;
+                    const lane = boardData.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        const newNote = {
+                            id: generateUniqueId('note'),
+                            text: 'Nieuwe taak...',
+                            assignee: '',
+                            color: getRandomColor(),
+                            rotation: getRandomRotation()
+                        };
+                        lane.columns.todo.unshift(newNote);
+                        saveBoardData();
+                        renderBoard();
+                    }
+                });
+            });
+
+            // Briefje verwijderen
+            document.querySelectorAll('.delete-note-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const noteDiv = btn.closest('.sticky-note');
+                    const noteId = noteDiv.dataset.noteId;
+                    const laneId = noteDiv.dataset.laneId;
+                    const colId = noteDiv.dataset.colId;
+
+                    const lane = boardData.lanes.find(l => l.id === laneId);
+                    if (lane && lane.columns[colId]) {
+                        lane.columns[colId] = lane.columns[colId].filter(n => n.id !== noteId);
+                        saveBoardData();
+                        renderBoard();
+                    }
+                });
+            });
+
+            // Kleur van een briefje veranderen
+            document.querySelectorAll('.change-color-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const noteDiv = btn.closest('.sticky-note');
+                    const noteId = noteDiv.dataset.noteId;
+                    const laneId = noteDiv.dataset.laneId;
+                    const colId = noteDiv.dataset.colId;
+
+                    const lane = boardData.lanes.find(l => l.id === laneId);
+                    if (lane && lane.columns[colId]) {
+                        const note = lane.columns[colId].find(n => n.id === noteId);
+                        if (note) {
+                            const currentIndex = NOTE_COLORS.indexOf(note.color);
+                            const nextIndex = (currentIndex + 1) % NOTE_COLORS.length;
+                            note.color = NOTE_COLORS[nextIndex];
+                            saveBoardData();
+                            renderBoard();
+                        }
+                    }
+                });
+            });
+
+            // Tekst op het briefje bewerken
+            document.querySelectorAll('.note-text').forEach(textDiv => {
+                textDiv.addEventListener('blur', (e) => {
+                    const noteId = e.target.dataset.noteId;
+                    const newText = e.target.innerText;
+                    updateNoteField(noteId, 'text', newText);
+                });
+            });
+
+            // Verantwoordelijke bewerken
+            document.querySelectorAll('.note-assignee').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const noteId = e.target.dataset.noteId;
+                    const newAssignee = e.target.value;
+                    updateNoteField(noteId, 'assignee', newAssignee);
+                });
+            });
+        }
+
+        function updateNoteField(noteId, field, value) {
+            for (let lane of boardData.lanes) {
+                for (let colKey in lane.columns) {
+                    const note = lane.columns[colKey].find(n => n.id === noteId);
+                    if (note) {
+                        note[field] = value;
+                        saveBoardData();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // --- DRAG AND DROP FUNCTIONALITEIT ---
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            const col = e.currentTarget;
+            col.classList.add('drop-zone-active');
+        }
+
+        function handleDragLeave(e) {
+            const col = e.currentTarget;
+            col.classList.remove('drop-zone-active');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetColEl = e.currentTarget;
+            targetColEl.classList.remove('drop-zone-active');
+
+            const targetLaneId = targetColEl.dataset.laneId;
+            const targetColId = targetColEl.dataset.colId;
+
+            if (!draggedNoteId || !sourceLaneId || !sourceColId) return;
+
+            const sLane = boardData.lanes.find(l => l.id === sourceLaneId);
+            const tLane = boardData.lanes.find(l => l.id === targetLaneId);
+
+            if (!sLane || !tLane) return;
+
+            const noteIndex = sLane.columns[sourceColId].findIndex(n => n.id === draggedNoteId);
+            if (noteIndex === -1) return;
+
+            const [movedNote] = sLane.columns[sourceColId].splice(noteIndex, 1);
+
+            const afterElement = getDragAfterElement(targetColEl, e.clientY);
+            const targetNotesList = tLane.columns[targetColId];
+
+            if (afterElement == null) {
+                targetNotesList.push(movedNote);
+            } else {
+                const afterNoteId = afterElement.dataset.noteId;
+                const insertIndex = targetNotesList.findIndex(n => n.id === afterNoteId);
+                if (insertIndex !== -1) {
+                    targetNotesList.splice(insertIndex, 0, movedNote);
+                } else {
+                    targetNotesList.push(movedNote);
+                }
+            }
+
+            saveBoardData();
+            renderBoard();
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.sticky-note:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // --- GLOBALE ACTIES ---
+
+        // Nieuwe Swimlane Toevoegen
+        document.getElementById('add-lane-btn').addEventListener('click', () => {
+            const newLaneIndex = boardData.lanes.length + 1;
+            const newLane = {
+                id: generateUniqueId('lane'),
+                title: `Swimlane ${newLaneIndex}`,
+                columns: {
+                    todo: [],
+                    doing: [],
+                    done: []
+                }
+            };
+            boardData.lanes.push(newLane);
+            saveBoardData();
+            renderBoard();
+        });
+
+        // Bord Herstellen naar Standaard Instellingen
+        document.getElementById('reset-board-btn').addEventListener('click', () => {
+            if (confirm('Weet je zeker dat je het bord wilt herstellen? Alle huidige gegevens worden overschreven.')) {
+                localStorage.removeItem('kanban_sketch_data_v3');
+                loadBoardData();
+                renderBoard();
+            }
+        });
+
+        // --- INITIALISATIE BIJ MAKEN VAN DE PAGINA ---
+        window.onload = function () {
+            loadBoardData();
+            renderBoard();
+        };
+    </script>
+</body>
+</html>
